@@ -1,0 +1,14 @@
+# 가상환경
+.venv/
+
+# 대용량 원본 데이터
+*.tsv
+*.csv
+
+# 전처리 결과물 (노트북 실행으로 다시 생성 가능)
+outputs/
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
