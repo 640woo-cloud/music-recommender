@@ -1,0 +1,4 @@
+# Keep the small evaluation snapshots and metric tables despite root *.csv.
+inputs/
+!results/*.csv
+__pycache__/
