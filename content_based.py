@@ -12,6 +12,14 @@ content_based.py  -  Content-based artist recommendation using musical features
   5) Do not use other users' listening patterns (a different source of evidence
      from collaborative filtering).
 
+Final configuration (defaults)
+  Chosen from the team's evaluation of the experiment files (Precision@10 on the shared
+  test split): user weights = log1p(plays), StandardScaler after log1p on the four skewed
+  features (speechiness, acousticness, instrumentalness, liveness), method = cosine_learned.
+  Differences between settings were small and were observed on test, so they are not an
+  independently validated optimum. To reproduce all experiments, pass
+  --methods cosine,cosine_learned,knn together with the individual options.
+
 Techniques used
   - Normalization     : StandardScaler (+ optional log1p), L2 normalization of vectors
   - Vector space model: cosine similarity between user preference vector and artist
@@ -38,7 +46,7 @@ Note: Evaluation (Precision/Recall, etc.) is implemented by another teammate, so
 Usage (from the repository root)
   python content_based.py
   python content_based.py --out-dir outputs --results-dir content_based_result --k 10 --weight log
-  python content_based.py --weight binary --tag w_binary     # saves *_w_binary.csv files
+  python content_based.py --methods cosine,cosine_learned,knn --no-log-skewed --tag base   # experiment baseline
 
 Requirements: numpy, pandas, scikit-learn
 """
@@ -270,7 +278,11 @@ def parse_args():
                    help="User vector weights: log=log1p(play count), plays=raw play count, binary=listened or not")
     p.add_argument("--scaling", choices=["standard", "none"], default="standard",
                    help="Feature scaling: standard=StandardScaler, none=raw feature values")
-    p.add_argument("--log-skewed", action="store_true", help="Apply log1p to skewed features before standardization")
+    p.add_argument("--log-skewed", action=argparse.BooleanOptionalAction, default=True,
+                   help="Apply log1p to skewed features before standardization (default: on; use --no-log-skewed to turn off)")
+    p.add_argument("--methods", default="cosine_learned",
+                   help="Comma-separated methods to run: cosine, cosine_learned, knn "
+                        "(default: cosine_learned = final method; use cosine,cosine_learned,knn to reproduce the experiments)")
     p.add_argument("--knn-neighbors", type=int, default=10)
     p.add_argument("--epochs", type=int, default=300)
     p.add_argument("--lr", type=float, default=0.5)
@@ -294,7 +306,11 @@ def main():
     res_dir.mkdir(parents=True, exist_ok=True)
     K = args.k
     sfx = f"_{args.tag}" if args.tag else ""
-    print(f"Config: weight={args.weight} scaling={args.scaling} log_skewed={args.log_skewed} "
+    methods = [m.strip() for m in args.methods.split(",") if m.strip()]
+    unknown = set(methods) - {"cosine", "cosine_learned", "knn"}
+    if unknown or not methods:
+        raise ValueError(f"Unknown or empty --methods: {sorted(unknown)}. Choose from cosine, cosine_learned, knn.")
+    print(f"Config: methods={methods} weight={args.weight} scaling={args.scaling} log_skewed={args.log_skewed} "
           f"knn_neighbors={args.knn_neighbors} reg={args.reg} seed={args.seed} k={K} tag='{args.tag}'")
 
     # ---- Data (train.csv only) ----
@@ -321,20 +337,24 @@ def main():
 
     # ---- Scores per method ----
     scores: dict[str, np.ndarray] = {}
-    scores["cosine"] = cosine_scores(P_hat, X_hat)
+    weights_df = None
+    if "cosine" in methods:
+        scores["cosine"] = cosine_scores(P_hat, X_hat)
 
-    print("\n[Gradient descent] Learning per-feature weights with BPR loss")
-    w, history = learn_feature_weights(
-        R, Z, X_hat, epochs=args.epochs, lr=args.lr, reg=args.reg,
-        val_frac=args.val_frac, min_liked=5, seed=args.seed)
-    for epoch, loss, acc in history:
-        print(f"  epoch {epoch:4d}  loss={loss:.4f}  validation pair accuracy={acc:.3f}")
-    weights_df = pd.DataFrame({"feature": AUDIO_FEATURES, "weight": np.round(w, 4)})
-    print(weights_df.to_string(index=False))
-    scores["cosine_learned"] = cosine_scores(P_hat, X_hat, w)
+    if "cosine_learned" in methods:
+        print("\n[Gradient descent] Learning per-feature weights with BPR loss")
+        w, history = learn_feature_weights(
+            R, Z, X_hat, epochs=args.epochs, lr=args.lr, reg=args.reg,
+            val_frac=args.val_frac, min_liked=5, seed=args.seed)
+        for epoch, loss, acc in history:
+            print(f"  epoch {epoch:4d}  loss={loss:.4f}  validation pair accuracy={acc:.3f}")
+        weights_df = pd.DataFrame({"feature": AUDIO_FEATURES, "weight": np.round(w, 4)})
+        print(weights_df.to_string(index=False))
+        scores["cosine_learned"] = cosine_scores(P_hat, X_hat, w)
 
-    print("\n[k-NN] Scoring by the k most similar artists the user has heard")
-    scores["knn"] = knn_scores(X_hat, R, args.knn_neighbors)
+    if "knn" in methods:
+        print("\n[k-NN] Scoring by the k most similar artists the user has heard")
+        scores["knn"] = knn_scores(X_hat, R, args.knn_neighbors)
 
     # ---- Clustering ----
     if args.save_extras:
@@ -370,7 +390,8 @@ def main():
     pd.DataFrame(rec_rows, columns=["method", "user_id", "rank", "artist_name", "score"]) \
         .to_csv(res_dir / f"content_based_recs{sfx}.csv", index=False)
     if args.save_extras:
-        weights_df.to_csv(res_dir / f"content_based_feature_weights{sfx}.csv", index=False)
+        if weights_df is not None:
+            weights_df.to_csv(res_dir / f"content_based_feature_weights{sfx}.csv", index=False)
         pd.DataFrame({"artist_name": artists, "cluster": labels}) \
             .to_csv(res_dir / f"artist_clusters{sfx}.csv", index=False)
         profile.to_csv(res_dir / f"artist_cluster_profiles{sfx}.csv")
