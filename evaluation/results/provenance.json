@@ -1,0 +1,12 @@
+{
+  "memory_cf_commit": "177a8e3aa44471097ae75a7e01ed3de2f24429e0",
+  "content_code_commit": "0f5b24e",
+  "inputs_sha256": {
+    "content_based_result.zip": "731596b39816cb5fe3ad3194100eff7e746ab16527c1030b1b41fe81cdad3188",
+    "recs_memory_all.csv": "70ea708b3165407c5b16d15e606ed8434267a055b193b0aa2dbf64c511562e02",
+    "recs_memory_top50.csv": "8f3a79866f7fbdf68189ce56e96de488f1bc847a5177e0be606c8b9551e09643"
+  },
+  "evaluation_date": "2026-11-14",
+  "metric_aggregation": "macro average over 973 test users",
+  "recommendations_per_user": 10
+}
