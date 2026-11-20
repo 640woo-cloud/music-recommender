@@ -67,6 +67,12 @@ pip install pandas numpy scipy scikit-learn jupyter
    evaluate(recs, test, k=10)
    ```
 
+   네 가지 방법을 한 번에 평가하려면 다음을 실행한다. 결과는 `evaluation/results/final_metrics.csv`에 저장된다.
+
+   ```bash
+   python evaluation/run_evaluation.py
+   ```
+
 모든 추천 결과는 `user_id, rank, artist_name` 형식으로 저장해서 같은 평가 함수로 비교할 수 있게 했다.
 
 ## 방법 요약
@@ -125,7 +131,6 @@ pip install pandas numpy scipy scikit-learn jupyter
 - 아티스트 이름으로만 매칭해서 Spotify에 없는 아티스트(전체 아티스트의 약 95%)는 분석에서 빠졌다. 다만 청취량 기준으로는 약 49%가 남는다.
 - 시간 순서가 아닌 무작위 분할이라 "다음에 들을 아티스트"를 예측하는 상황과는 차이가 있다.
 - 콘텐츠 기반의 최종 설정은 test 결과를 보고 고른 것이라 독립적으로 검증된 최적값은 아니다.
-- `evaluation/run_evaluation.py`는 팀 내부에서 사용한 로컬 파일과 특정 커밋을 참조하므로 그대로는 재실행되지 않는다. 결과 확인은 `evaluation/results/`의 CSV를 보면 된다.
 
 ## 팀원 및 역할
 
