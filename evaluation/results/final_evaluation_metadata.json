@@ -1,0 +1,17 @@
+{
+  "source_commit": "fb5ee0f0e97907fd67110116872e118c4ca0bece",
+  "train_rows": 224925,
+  "test_rows": 56727,
+  "users": 973,
+  "k": 10,
+  "aggregation": "macro average over all test users",
+  "input_sha256": {
+    "outputs/train.csv": "52e5dc9e15f3b346a2a69932dfb833a5d003474a2b7e43415f61634b4bf0036b",
+    "outputs/test.csv": "91690cbf8e31efb346c47294792481f47a9bb9affb310e9588423ea428c4c512",
+    "evaluate.py": "97c740586eb245ea3cbeb84a917c22a83d659d1b5ecd5c891d9409bc64ead9d9",
+    "outputs/recs_popular.csv": "f3c88ecc4759a2694c410a7370f927aeb28470ddfc867f157f4fc24c306cd693",
+    "outputs/recs_memory_cf.csv": "70ea708b3165407c5b16d15e606ed8434267a055b193b0aa2dbf64c511562e02",
+    "outputs/recs_memory_cf_selected.csv": "8f3a79866f7fbdf68189ce56e96de488f1bc847a5177e0be606c8b9551e09643",
+    "content_based_result/content_based_recs.csv": "09b2d10dedf913829c09754a8bbfa9a528f3da4e110e308e5015b4d669e298a8"
+  }
+}
